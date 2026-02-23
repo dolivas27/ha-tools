@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Generator v4 — HA Device Log</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #21262d;
+    --accent:    #2e75b6;
+    --accent2:   #4fc3f7;
+    --text:      #e6edf3;
+    --muted:     #7d8590;
+    --success:   #3fb950;
+    --grid:      rgba(46, 117, 182, 0.07);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+  }
+  .header .eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .header h1 span {
+    color: var(--accent2);
+  }
+  .header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+  }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.15);
+  }
+  textarea::placeholder { color: var(--muted); }
+
+  /* Size selector */
+  .size-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .size-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .size-btn:hover { border-color: var(--accent); color: var(--text); }
+  .size-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Generate button */
+  .btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 13px 20px;
+    transition: all 0.2s;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:hover { background: #3a8fd1; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(46,117,182,0.4); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* QR output */
+  .qr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px 24px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    animation: fadeUp 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--success), var(--accent2));
+  }
+  .qr-card.visible { display: flex; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .qr-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--success);
+    text-transform: uppercase;
+  }
+
+  #qr-output {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 40px rgba(79, 195, 247, 0.15);
+  }
+  #qr-output canvas, #qr-output img { display: block; }
+
+  .qr-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    word-break: break-all;
+    max-width: 300px;
+    line-height: 1.6;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+    transition: all 0.2s;
+    flex: 1;
+    text-align: center;
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .btn-download {
+    background: var(--success);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+    transition: all 0.2s;
+    flex: 1;
+    text-decoration: none;
+    text-align: center;
+  }
+  .btn-download:hover { background: #2ea043; }
+
+  /* History */
+  .history {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .history.visible { display: flex; }
+  .history-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    word-break: break-all;
+  }
+  .history-item:hover { border-color: var(--accent); color: var(--text); }
+  .history-item .hist-arrow { opacity: 0.4; flex-shrink: 0; }
+
+  /* Matter info box */
+  .matter-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .matter-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+  }
+  .matter-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .matter-body code {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg);
+    color: var(--success);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .matter-body strong { color: var(--text); }
+  .matter-body em { color: var(--accent2); font-style: normal; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="eyebrow">Home Automation Device Log  ·  v4</div>
+    <h1>QR Code <span>Generator</span></h1>
+    <p>Paste any value from the QR Code Ref column — entity ID, URL, job number — and get an instant scannable code.</p>
+  </div>
+
+  <div class="card">
+    <label for="qr-input">QR Code Value</label>
+    <textarea id="qr-input" placeholder="Paste value here&#10;e.g. switch.chandler_master_nightstand_left"></textarea>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <label>Size</label>
+      <div class="size-row">
+        <button class="size-btn" data-size="128">Small</button>
+        <button class="size-btn active" data-size="200">Medium</button>
+        <button class="size-btn" data-size="280">Large</button>
+        <button class="size-btn" data-size="380">XL</button>
+      </div>
+    </div>
+
+    <button class="btn" id="generate-btn" onclick="generateQR()">Generate QR Code</button>
+  </div>
+
+  <div class="qr-card" id="qr-card">
+    <div class="qr-label">✓ Ready to Scan</div>
+    <div id="qr-output"></div>
+    <div class="qr-value" id="qr-value-display"></div>
+    <div class="action-row">
+      <button class="btn-secondary" onclick="clearAll()">Clear</button>
+      <button class="btn-download" id="download-btn" onclick="downloadQR()">Download PNG</button>
+    </div>
+  </div>
+
+  <div class="history" id="history-section">
+    <div class="history-label">Recent</div>
+    <div id="history-list"></div>
+  </div>
+
+  <div class="matter-info">
+    <div class="matter-title">📱 Matter Device QR Codes</div>
+    <div class="matter-body">
+      Matter setup codes start with <code>MT:</code> — e.g. <code>MT:6NSK4AIB00UB3I2M600</code><br>
+      To capture: scan the device sticker with a <strong>plain QR scanner app</strong> (not your camera app) to get the raw string. Store that string in the <em>Matter Setup Code</em> column of the Device Log.<br>
+      To recreate: paste the full <code>MT:</code> string above and generate — your phone camera will recognize it as a Matter device and trigger the setup flow.
+    </div>
+  </div>
+
+  <div class="footer">SCAN WITH ANY QR READER OR PHONE CAMERA</div>
+
+</div>
+
+<script>
+  let selectedSize = 200;
+  let history = [];
+
+  // On load — check for ?code= URL parameter and auto-generate
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      document.getElementById('qr-input').value = decodeURIComponent(code);
+      generateQR();
+    }
+  });
+
+  // Size buttons
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSize = parseInt(btn.dataset.size);
+      const val = document.getElementById('qr-input').value.trim();
+      if (val) generateQR();
+    });
+  });
+
+  // Enter key generates
+  document.getElementById('qr-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      generateQR();
+    }
+  });
+
+  function generateQR() {
+    const input = document.getElementById('qr-input').value.trim();
+    if (!input) return;
+
+    const output = document.getElementById('qr-output');
+    output.innerHTML = '';
+
+    new QRCode(output, {
+      text: input,
+      width: selectedSize,
+      height: selectedSize,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    document.getElementById('qr-value-display').textContent = input;
+    document.getElementById('qr-card').classList.add('visible');
+
+    // Add to history
+    if (!history.includes(input)) {
+      history.unshift(input);
+      if (history.length > 5) history.pop();
+      renderHistory();
+    }
+  }
+
+  function clearAll() {
+    document.getElementById('qr-input').value = '';
+    document.getElementById('qr-output').innerHTML = '';
+    document.getElementById('qr-card').classList.remove('visible');
+    document.getElementById('qr-input').focus();
+  }
+
+  function downloadQR() {
+    const canvas = document.querySelector('#qr-output canvas');
+    if (!canvas) return;
+    const value = document.getElementById('qr-input').value.trim();
+    const filename = value.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 40) || 'qrcode';
+    const link = document.createElement('a');
+    link.download = `QR_${filename}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const section = document.getElementById('history-section');
+    if (history.length === 0) { section.classList.remove('visible'); return; }
+    section.classList.add('visible');
+    list.innerHTML = history.map(val => `
+      <div class="history-item" onclick="loadHistory('${val.replace(/'/g, "\\'")}')">
+        <span>${val}</span>
+        <span class="hist-arrow">→</span>
+      </div>
+    `).join('');
+  }
+
+  function loadHistory(val) {
+    document.getElementById('qr-input').value = val;
+    generateQR();
+  }
+</script>
+</body>
+</html>
