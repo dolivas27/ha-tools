@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstallsIT Mix Calculator v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1210;
+    --surface: #161d18;
+    --surface2: #1e2820;
+    --border: #2a3a2d;
+    --green: #4ade80;
+    --green-dim: #22543d;
+    --green-glow: rgba(74,222,128,0.15);
+    --blue: #60a5fa;
+    --blue-dim: #1e3a5f;
+    --blue-glow: rgba(96,165,250,0.15);
+    --amber: #fbbf24;
+    --amber-dim: #78350f;
+    --text: #e2f0e6;
+    --text-muted: #7a9480;
+    --text-dim: #4a6450;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Outfit', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); min-height: 100vh;
+    padding: 24px 16px 60px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(74,222,128,0.06) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(74,222,128,0.02) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(74,222,128,0.02) 40px);
+  }
+
+  header { max-width:680px; margin:0 auto 24px; display:flex; align-items:flex-start; gap:16px; }
+  .logo-mark {
+    width:52px; height:52px; border:2px solid var(--green); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    box-shadow:0 0 20px var(--green-glow),inset 0 0 20px var(--green-glow); background:var(--surface);
+  }
+  .logo-mark svg { width:28px; height:28px; }
+  .header-text h1 { font-size:27px; font-weight:700; letter-spacing:-0.3px; color:var(--text); line-height:1.2; }
+  .header-text h1 span { color:var(--green); }
+  .header-text p { font-size:15px; color:var(--text-muted); margin-top:4px; font-weight:300; }
+
+  /* SWITCHER */
+  .switcher-wrap { max-width:680px; margin:0 auto 24px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .switcher-btn {
+    background:var(--surface); border:2px solid var(--border); border-radius:12px;
+    padding:14px 16px; cursor:pointer; transition:all 0.18s; text-align:left;
+  }
+  .switcher-btn .sw-label { font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px; }
+  .switcher-btn .sw-name  { font-size:16px; font-weight:700; color:var(--text-muted); line-height:1.2; }
+  .switcher-btn .sw-sub   { font-size:12px; color:var(--text-dim); margin-top:3px; }
+  .switcher-btn.active-bona { border-color:var(--green); background:var(--green-glow); box-shadow:0 0 16px var(--green-glow); }
+  .switcher-btn.active-bona .sw-label { color:var(--green); }
+  .switcher-btn.active-bona .sw-name  { color:var(--text); }
+  .switcher-btn.active-bona .sw-sub   { color:var(--text-muted); }
+  .switcher-btn.active-cent { border-color:var(--blue); background:var(--blue-glow); box-shadow:0 0 16px var(--blue-glow); }
+  .switcher-btn.active-cent .sw-label { color:var(--blue); }
+  .switcher-btn.active-cent .sw-name  { color:var(--text); }
+  .switcher-btn.active-cent .sw-sub   { color:var(--text-muted); }
+
+  /* CARDS */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:0 auto 20px; overflow:hidden; }
+  .card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-title { font-size:14px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); }
+  .ratio-tag { font-family:var(--mono); font-size:13px; color:var(--green); background:var(--green-glow); border:1px solid var(--green-dim); padding:3px 10px; border-radius:20px; }
+  .blue-tag  { font-family:var(--mono); font-size:13px; color:var(--blue);  background:var(--blue-glow);  border:1px solid var(--blue-dim);  padding:3px 10px; border-radius:20px; }
+  .card-body { padding:20px; }
+
+  /* PRESETS */
+  .presets-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:4px; }
+  .preset-group-label { font-size:13px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; margin-top:4px; }
+  .preset-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text-muted); font-family:var(--sans); font-size:15px; font-weight:600; padding:12px 6px; border-radius:8px; cursor:pointer; transition:all 0.15s; text-align:center; }
+  .preset-btn:hover, .preset-btn.active { background:var(--green-glow); border-color:var(--green); color:var(--green); box-shadow:0 0 12px var(--green-glow); }
+
+  /* INPUTS */
+  .input-row { display:flex; gap:10px; margin-top:20px; }
+  .input-wrap { flex:1; position:relative; }
+  .input-wrap label { display:block; font-size:13px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .input-wrap input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--mono); font-size:26px; padding:14px 16px; outline:none; transition:border-color 0.15s,box-shadow 0.15s; }
+  .input-wrap input:focus { border-color:var(--green); box-shadow:0 0 0 3px var(--green-glow); }
+  .input-wrap input.blue-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-glow); }
+  .unit-select-wrap { width:130px; }
+  .unit-select-wrap label { display:block; font-size:13px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .unit-select-wrap select { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--sans); font-size:15px; font-weight:600; padding:14px 12px; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-repeat:no-repeat; background-position:right 12px center; transition:border-color 0.15s; }
+  .unit-select-wrap select.green-sel { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234ade80' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  .unit-select-wrap select.blue-sel  { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2360a5fa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  .unit-select-wrap select.green-sel:focus { border-color:var(--green); }
+  .unit-select-wrap select.blue-sel:focus  { border-color:var(--blue); }
+
+  /* PRODUCT SELECT */
+  .product-select-wrap { margin-bottom:4px; }
+  .product-select-wrap label { display:block; font-size:13px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .product-select-wrap select { width:100%; background:var(--surface2); border:1px solid var(--blue-dim); border-radius:10px; color:var(--text); font-family:var(--sans); font-size:16px; font-weight:600; padding:13px 16px; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2360a5fa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; transition:border-color 0.15s; }
+  .product-select-wrap select:focus { border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-glow); }
+
+  .product-info-strip { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .product-pill { background:var(--blue-glow); border:1px solid var(--blue-dim); border-radius:20px; padding:4px 12px; font-size:12px; color:var(--blue); font-family:var(--mono); }
+  .product-pill.amber-pill { background:rgba(251,191,36,0.1); border-color:var(--amber-dim); color:var(--amber); }
+
+  /* RESULTS */
+  .results-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:0 auto 20px; overflow:hidden; display:none; }
+  .results-card.visible { display:block; }
+  .results-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+  .triple-grid  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
+  .result-box { background:var(--surface); padding:20px; }
+  .result-box.total { grid-column:1/-1; background:var(--surface2); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .result-label { font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot-green { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .dot-blue  { background:var(--blue);  box-shadow:0 0 6px var(--blue); }
+  .dot-amber { background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .dot-white { background:var(--text); }
+  .result-primary { font-family:var(--mono); font-size:32px; font-weight:400; color:var(--text); line-height:1; }
+  .result-primary.green { color:var(--green); }
+  .result-primary.blue  { color:var(--blue); }
+  .result-primary.amber { color:var(--amber); }
+  .result-secondary { font-family:var(--mono); font-size:15px; color:var(--text-muted); margin-top:6px; }
+  .total-label { font-size:14px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); }
+  .total-value { font-family:var(--mono); font-size:24px; color:var(--text); text-align:right; }
+  .total-value span { font-size:15px; color:var(--text-muted); margin-left:6px; }
+
+  /* INSTRUCTIONS */
+  .instructions-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:0 auto 20px; overflow:hidden; display:none; }
+  .instructions-card.visible { display:block; }
+  .steps { padding:20px; display:flex; flex-direction:column; gap:12px; }
+  .step { display:flex; gap:14px; align-items:flex-start; padding:14px; background:var(--surface2); border-radius:10px; border:1px solid var(--border); animation:fadeIn 0.3s ease both; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .step-num { width:26px; height:26px; border-radius:50%; background:var(--green-dim); border:1px solid var(--green); color:var(--green); font-family:var(--mono); font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .step-num.blue-num { background:var(--blue-dim); border-color:var(--blue); color:var(--blue); }
+  .step-text { font-size:16px; line-height:1.7; color:var(--text-muted); }
+  .step-text strong { color:var(--text); font-weight:600; }
+  .step-text .hi       { color:var(--green); font-family:var(--mono); }
+  .step-text .hi-blue  { color:var(--blue);  font-family:var(--mono); }
+  .step-text .hi-amber { color:var(--amber); font-family:var(--mono); }
+  .warning-box { margin:0 20px 20px; padding:12px 14px; background:rgba(251,191,36,0.07); border:1px solid var(--amber-dim); border-radius:10px; font-size:15px; color:var(--amber); display:flex; gap:8px; align-items:flex-start; }
+
+  /* PANELS */
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  /* FOOTER */
+  footer { max-width:680px; margin:32px auto 0; text-align:center; font-size:13px; color:var(--text-dim); letter-spacing:0.5px; }
+  .changelog { max-width:680px; margin:24px auto 40px; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+  .changelog-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .changelog-body { padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+  .cl-row { display:flex; gap:12px; font-size:14px; }
+
+  @media(max-width:480px){
+    .presets-grid{gap:6px} .preset-btn{font-size:14px;padding:10px 4px}
+    .result-primary{font-size:26px} .results-grid{grid-template-columns:1fr}
+    .triple-grid{grid-template-columns:1fr} .result-box.total{flex-direction:column;align-items:flex-start}
+    .switcher-btn .sw-name{font-size:14px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="6" width="10" height="16" rx="2" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <rect x="15" y="6" width="10" height="16" rx="2" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <path d="M8 12h14M8 16h14" stroke="#4ade80" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+      <circle cx="8" cy="22" r="2" fill="#4ade80" opacity="0.6"/>
+      <circle cx="20" cy="22" r="2" fill="#4ade80" opacity="0.6"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>InstallsIT <span>Mix Calc</span></h1>
+    <p>InstallsIT Inc. · Product Mix Calculator</p>
+  </div>
+</header>
+
+<!-- SWITCHER -->
+<div class="switcher-wrap">
+  <button class="switcher-btn active-bona" onclick="switchProduct('bona',this)">
+    <div class="sw-label">Flooring</div>
+    <div class="sw-name">Bona Traffic HD</div>
+    <div class="sw-sub">Ratio 1:11.33 · 2-Component</div>
+  </button>
+  <button class="switcher-btn" onclick="switchProduct('cent',this)">
+    <div class="sw-label">Paint / Primer</div>
+    <div class="sw-name">Centurion 2K</div>
+    <div class="sw-sub">Weight-based · 6 products</div>
+  </button>
+</div>
+
+<!-- ═══════════════ BONA PANEL ════════════════ -->
+<div class="panel active" id="panel-bona">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Desired Batch Size</span>
+      <span class="ratio-tag">1 : 11.33</span>
+    </div>
+    <div class="card-body">
+      <div class="preset-group-label">Quick select</div>
+      <div class="presets-grid">
+        <button class="preset-btn" onclick="bonaPreset(4,'oz',this)">4 oz</button>
+        <button class="preset-btn" onclick="bonaPreset(8,'oz',this)">8 oz</button>
+        <button class="preset-btn" onclick="bonaPreset(16,'oz',this)">16 oz</button>
+        <button class="preset-btn" onclick="bonaPreset(32,'oz',this)">1 Qt</button>
+        <button class="preset-btn" onclick="bonaPreset(64,'oz',this)">2 Qt</button>
+        <button class="preset-btn" onclick="bonaPreset(96,'oz',this)">3 Qt</button>
+        <button class="preset-btn" onclick="bonaPreset(128,'oz',this)">1 Gal</button>
+        <button class="preset-btn" onclick="bonaClear()" style="color:var(--text-dim)">Clear</button>
+      </div>
+      <div class="input-row">
+        <div class="input-wrap">
+          <label>Amount</label>
+          <input type="number" id="bona-amount" placeholder="0" min="0" oninput="bonaCalc()"/>
+        </div>
+        <div class="unit-select-wrap">
+          <label>Unit</label>
+          <select id="bona-unit" class="green-sel" onchange="bonaCalc()">
+            <option value="oz">fl oz</option>
+            <option value="ml">ml</option>
+            <option value="qt">qt</option>
+            <option value="gal">gal</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-card" id="bona-resultsCard">
+    <div class="card-header">
+      <span class="card-title">Mix Amounts</span>
+      <span class="ratio-tag" id="bona-batchLabel">—</span>
+    </div>
+    <div class="results-grid">
+      <div class="result-box">
+        <div class="result-label"><span class="dot dot-green"></span> Traffic HD Finish</div>
+        <div class="result-primary green" id="bona-finishOz">—</div>
+        <div class="result-secondary" id="bona-finishMl">—</div>
+      </div>
+      <div class="result-box">
+        <div class="result-label"><span class="dot dot-amber"></span> Traffic HD Hardener</div>
+        <div class="result-primary amber" id="bona-hardenerOz">—</div>
+        <div class="result-secondary" id="bona-hardenerMl">—</div>
+      </div>
+      <div class="result-box total">
+        <div class="total-label"><span class="dot dot-white" style="display:inline-block;margin-right:6px;"></span>Total Mixed Volume</div>
+        <div class="total-value" id="bona-totalVol">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions-card" id="bona-instructionsCard">
+    <div class="card-header"><span class="card-title">Mixing Instructions</span></div>
+    <div id="bona-warningBox"></div>
+    <div class="steps" id="bona-steps"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CENTURION PANEL ════════════════ -->
+<div class="panel" id="panel-cent">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Centurion 2K — Product &amp; Batch</span>
+      <span class="blue-tag">Weight-Based</span>
+    </div>
+    <div class="card-body">
+      <div class="product-select-wrap">
+        <label>Select Product</label>
+        <select id="cent-product" onchange="centProductChanged()">
+          <option value="">— Choose a product —</option>
+          <option value="CW-1107">CW-1107 · 2K White Primer</option>
+          <option value="CW-1111">CW-1111 · 1K/2K Hybrid Primer</option>
+          <option value="CW-1907">CW-1907 · 2K Black Primer</option>
+          <option value="CW-3020">CW-3020 · Natural Effect</option>
+          <option value="CW-302T">CW-302* · Clear</option>
+          <option value="CW-302TB">CW-302*TB · Clear Tint Base</option>
+        </select>
+      </div>
+      <div class="product-info-strip" id="cent-info-strip" style="display:none">
+        <span class="product-pill" id="cent-pill-ratio">—</span>
+        <span class="product-pill amber-pill" id="cent-pill-pot">—</span>
+        <span class="product-pill" id="cent-pill-factor">—</span>
+      </div>
+      <div class="input-row" style="margin-top:18px;">
+        <div class="input-wrap">
+          <label>Base Amount</label>
+          <input type="number" id="cent-amount" placeholder="0" min="0" class="blue-input" oninput="centCalc()"/>
+        </div>
+        <div class="unit-select-wrap">
+          <label>Unit</label>
+          <select id="cent-unit" class="blue-sel" onchange="centCalc()">
+            <option value="oz_wt">oz (weight)</option>
+            <option value="oz_fl">fl oz</option>
+            <option value="ml">ml</option>
+            <option value="g">grams</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-card" id="cent-resultsCard">
+    <div class="card-header">
+      <span class="card-title">Mix Amounts</span>
+      <span class="blue-tag" id="cent-batchLabel">—</span>
+    </div>
+    <div class="triple-grid">
+      <div class="result-box">
+        <div class="result-label"><span class="dot dot-blue"></span> Base (weight)</div>
+        <div class="result-primary blue" id="cent-baseG">—</div>
+        <div class="result-secondary" id="cent-baseOz">—</div>
+      </div>
+      <div class="result-box">
+        <div class="result-label"><span class="dot dot-amber"></span> Catalyst (grams)</div>
+        <div class="result-primary amber" id="cent-catG">—</div>
+        <div class="result-secondary" id="cent-catGsub">—</div>
+      </div>
+      <div class="result-box">
+        <div class="result-label"><span class="dot dot-amber"></span> Catalyst (volume)</div>
+        <div class="result-primary amber" id="cent-catVol">—</div>
+        <div class="result-secondary" id="cent-catVolSub">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions-card" id="cent-instructionsCard">
+    <div class="card-header"><span class="card-title">Mixing Instructions</span></div>
+    <div id="cent-warningBox"></div>
+    <div class="steps" id="cent-steps"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Always verify against current TDS · InstallsIT Inc.<br>
+  Not affiliated with Bona AB or Centurion
+</footer>
+
+<!-- CHANGELOG -->
+<div class="changelog">
+  <div class="changelog-header">
+    <span class="card-title">Changelog</span>
+    <span style="font-family:var(--mono);font-size:13px;color:var(--green);">v2.0 current</span>
+  </div>
+  <div class="changelog-body">
+    <div class="cl-row">
+      <span style="font-family:var(--mono);color:var(--green);min-width:42px;">v2.0</span>
+      <span style="color:var(--text-muted);">Added Centurion 2K product line (6 products, weight-based catalyst calculation). Product switcher at top. Blue accent theme for Centurion.</span>
+    </div>
+    <div class="cl-row">
+      <span style="font-family:var(--mono);color:var(--text-dim);min-width:42px;">v1.3</span>
+      <span style="color:var(--text-dim);">Rebranded to InstallsIT Mix Calculator. Added changelog.</span>
+    </div>
+    <div class="cl-row">
+      <span style="font-family:var(--mono);color:var(--text-dim);min-width:42px;">v1.2</span>
+      <span style="color:var(--text-dim);">TDS corrections: stir vigorously 30–45 sec, rest 5–10 min, pot life 4 hrs max, one-time mix, do not recap.</span>
+    </div>
+    <div class="cl-row">
+      <span style="font-family:var(--mono);color:var(--text-dim);min-width:42px;">v1.1</span>
+      <span style="color:var(--text-dim);">Increased font sizes across the board.</span>
+    </div>
+    <div class="cl-row">
+      <span style="font-family:var(--mono);color:var(--text-dim);min-width:42px;">v1.0</span>
+      <span style="color:var(--text-dim);">Initial build. Bona Traffic HD with small batch syringe workflow, oz/ml dual display, preset buttons, dark mode.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const CENT_PRODUCTS = {
+  'CW-1107':  { name:'2K White Primer',     weightFactor:36.72, catPct:0.10, potLife:'2 hours' },
+  'CW-1111':  { name:'1K/2K Hybrid Primer', weightFactor:41.64, catPct:0.05, potLife:'3.5 hours' },
+  'CW-1907':  { name:'2K Black Primer',     weightFactor:33.80, catPct:0.10, potLife:'2 hours' },
+  'CW-3020':  { name:'Natural Effect',      weightFactor:30.54, catPct:0.10, potLife:'2 hours' },
+  'CW-302T':  { name:'Clear',               weightFactor:30.16, catPct:0.10, potLife:'2 hours' },
+  'CW-302TB': { name:'Clear Tint Base',     weightFactor:30.66, catPct:0.10, potLife:'2 hours' },
+};
+const CAT_G_PER_FLOZ = 26.65 / 5;
+const ML_PER_FLOZ    = 29.5735;
+
+function ozToMl(oz)  { return oz * ML_PER_FLOZ; }
+function mlToOz(ml)  { return ml / ML_PER_FLOZ; }
+function fmtBoth(oz) { return { oz: oz.toFixed(2)+' fl oz', ml: ozToMl(oz).toFixed(1)+' ml' }; }
+
+// ── SWITCHER ────────────────────────────────────────────────────
+function switchProduct(which, btn) {
+  document.querySelectorAll('.switcher-btn').forEach(b => b.classList.remove('active-bona','active-cent'));
+  btn.classList.add(which==='bona' ? 'active-bona' : 'active-cent');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+which).classList.add('active');
+}
+
+// ── BONA ─────────────────────────────────────────────────────────
+const BONA_RATIO = 11.33;
+
+function toOzBona(val, unit) {
+  if (unit==='oz')  return val;
+  if (unit==='ml')  return mlToOz(val);
+  if (unit==='qt')  return val*32;
+  if (unit==='gal') return val*128;
+}
+
+function bonaPreset(val, unit, btn) {
+  document.getElementById('bona-amount').value = val;
+  document.getElementById('bona-unit').value   = unit;
+  document.querySelectorAll('#panel-bona .preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  bonaCalc();
+}
+
+function bonaClear() {
+  document.getElementById('bona-amount').value = '';
+  document.querySelectorAll('#panel-bona .preset-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('bona-resultsCard').classList.remove('visible');
+  document.getElementById('bona-instructionsCard').classList.remove('visible');
+}
+
+function bonaCalc() {
+  const raw  = parseFloat(document.getElementById('bona-amount').value);
+  const unit = document.getElementById('bona-unit').value;
+  if (!raw || raw<=0) {
+    document.getElementById('bona-resultsCard').classList.remove('visible');
+    document.getElementById('bona-instructionsCard').classList.remove('visible');
+    return;
+  }
+  const totalOz    = toOzBona(raw, unit);
+  const hardenerOz = totalOz / (BONA_RATIO+1);
+  const finishOz   = totalOz - hardenerOz;
+  const hardenerMl = ozToMl(hardenerOz);
+  const finishMl   = ozToMl(finishOz);
+  const fF = fmtBoth(finishOz), fH = fmtBoth(hardenerOz), tF = fmtBoth(totalOz);
+
+  document.getElementById('bona-finishOz').textContent   = fF.oz;
+  document.getElementById('bona-finishMl').textContent   = fF.ml;
+  document.getElementById('bona-hardenerOz').textContent = fH.oz;
+  document.getElementById('bona-hardenerMl').textContent = fH.ml;
+  document.getElementById('bona-batchLabel').textContent = raw+' '+unit;
+  document.getElementById('bona-totalVol').innerHTML     = tF.oz+'<span>'+tF.ml+'</span>';
+  document.getElementById('bona-resultsCard').classList.add('visible');
+  bonaInstructions(totalOz, finishOz, finishMl, hardenerOz, hardenerMl);
+}
+
+function bonaInstructions(totalOz, finishOz, finishMl, hardenerOz, hardenerMl) {
+  const stepsEl = document.getElementById('bona-steps');
+  const warnEl  = document.getElementById('bona-warningBox');
+  const isSmall = totalOz <= 16;
+  const steps   = [];
+
+  if (isSmall) {
+    const finishRound    = Math.floor(finishMl/50)*50;
+    const finishTop      = Math.round(finishMl - finishRound);
+    const finishRoundAlt = finishRound > 0 ? finishRound : Math.round(finishMl);
+
+    warnEl.innerHTML = `<div class="warning-box">⚠️ <span>Small batch — use a syringe for precise measurement. <strong>Must be used within 4 hours.</strong> Do not tightly recap. One-time mix only.</span></div>`;
+    steps.push({n:1, text:`Pour <strong class="hi">${finishRoundAlt} ml</strong> of Traffic HD Finish into a clean measuring cup from the jug.`});
+    if (finishTop > 0) {
+      steps.push({n:2, text:`Using a syringe, draw <strong class="hi">${finishTop} ml</strong> from the measuring cup and set aside. Top the cup back up to <strong class="hi">${finishRoundAlt} ml</strong> from the jug — then add the <strong class="hi">${finishTop} ml</strong> back in. You now have <strong class="hi">${Math.round(finishMl)} ml (${finishOz.toFixed(2)} fl oz)</strong> of finish.`});
+    } else {
+      steps.push({n:2, text:`Confirm the cup reads <strong class="hi">${Math.round(finishMl)} ml (${finishOz.toFixed(2)} fl oz)</strong> of Traffic HD Finish.`});
+    }
+    steps.push({n:3, text:`Pour a small amount of hardener into a separate clean glass cup. Draw <strong class="hi-amber">${Math.round(hardenerMl)} ml (${hardenerOz.toFixed(2)} fl oz)</strong> with a syringe from the glass cup. Unused hardener can be poured back — syringe never contacts the original bottle.`});
+    steps.push({n:4, text:`Add the <strong class="hi-amber">${Math.round(hardenerMl)} ml</strong> of hardener to the finish. Stir vigorously for 30–45 seconds. Vigorous stirring replaces the shake called for in the TDS.`});
+    steps.push({n:5, text:`Let the mixture rest for <strong>5–10 minutes</strong> before applying. Total mixed volume: <strong class="hi">${Math.round(ozToMl(totalOz))} ml (${totalOz.toFixed(2)} fl oz)</strong>.`});
+    steps.push({n:6, text:`⏱ <strong>Pot life: 4 hours maximum.</strong> Properties diminish after 4 hrs. One-time mix — do not tightly recap any leftover product.`});
+  } else {
+    warnEl.innerHTML = `<div class="warning-box">⚠️ <span><strong>Must be used within 4 hours.</strong> Do not tightly recap. One-time mix only.</span></div>`;
+    steps.push({n:1, text:`Measure <strong class="hi">${finishOz.toFixed(2)} fl oz (${Math.round(finishMl)} ml)</strong> of Traffic HD Finish into a clean mixing container.`});
+    steps.push({n:2, text:`Measure <strong class="hi-amber">${hardenerOz.toFixed(2)} fl oz (${Math.round(hardenerMl)} ml)</strong> of Traffic HD Hardener into a separate cup, then add to the finish.`});
+    steps.push({n:3, text:`Shake vigorously 30–45 seconds (or stir vigorously in an open container). Total: <strong class="hi">${totalOz.toFixed(2)} fl oz (${Math.round(ozToMl(totalOz))} ml)</strong>.`});
+    steps.push({n:4, text:`Let the mixture rest for <strong>5–10 minutes</strong> before applying.`});
+    steps.push({n:5, text:`⏱ <strong>Pot life: 4 hours maximum.</strong> One-time mix — do not tightly recap leftover product.`});
+  }
+
+  stepsEl.innerHTML = steps.map((s,i) =>
+    `<div class="step" style="animation-delay:${i*0.07}s">
+      <div class="step-num">${s.n}</div>
+      <div class="step-text">${s.text}</div>
+    </div>`).join('');
+  document.getElementById('bona-instructionsCard').classList.add('visible');
+}
+
+// ── CENTURION ────────────────────────────────────────────────────
+function centProductChanged() {
+  const sku   = document.getElementById('cent-product').value;
+  const strip = document.getElementById('cent-info-strip');
+  if (!sku) {
+    strip.style.display = 'none';
+    document.getElementById('cent-resultsCard').classList.remove('visible');
+    document.getElementById('cent-instructionsCard').classList.remove('visible');
+    return;
+  }
+  const p = CENT_PRODUCTS[sku];
+  document.getElementById('cent-pill-ratio').textContent  = `Catalyst: ${p.catPct*100}% of base weight`;
+  document.getElementById('cent-pill-pot').textContent    = `Pot life: ${p.potLife}`;
+  document.getElementById('cent-pill-factor').textContent = `${p.weightFactor} g/oz`;
+  strip.style.display = 'flex';
+  centCalc();
+}
+
+function centToGrams(val, unit, p) {
+  if (unit==='oz_wt') return val * p.weightFactor;
+  if (unit==='oz_fl') return val * p.weightFactor;
+  if (unit==='ml')    return mlToOz(val) * p.weightFactor;
+  if (unit==='g')     return val;
+}
+
+function centCalc() {
+  const sku  = document.getElementById('cent-product').value;
+  const raw  = parseFloat(document.getElementById('cent-amount').value);
+  const unit = document.getElementById('cent-unit').value;
+  if (!sku || !raw || raw<=0) {
+    document.getElementById('cent-resultsCard').classList.remove('visible');
+    document.getElementById('cent-instructionsCard').classList.remove('visible');
+    return;
+  }
+  const p        = CENT_PRODUCTS[sku];
+  const baseG    = centToGrams(raw, unit, p);
+  const catG     = baseG * p.catPct;
+  const catFlOz  = catG / CAT_G_PER_FLOZ;
+  const catMl    = ozToMl(catFlOz);
+  const baseFlOz = baseG / p.weightFactor;
+  const baseMl   = ozToMl(baseFlOz);
+
+  document.getElementById('cent-baseG').textContent     = baseG.toFixed(1)+' g';
+  document.getElementById('cent-baseOz').textContent    = baseFlOz.toFixed(2)+' fl oz  /  '+baseMl.toFixed(1)+' ml';
+  document.getElementById('cent-catG').textContent      = catG.toFixed(1)+' g';
+  document.getElementById('cent-catGsub').textContent   = (p.catPct*100)+'% of base weight';
+  document.getElementById('cent-catVol').textContent    = catMl.toFixed(1)+' ml';
+  document.getElementById('cent-catVolSub').textContent = catFlOz.toFixed(2)+' fl oz';
+  document.getElementById('cent-batchLabel').textContent = raw+' '+unit;
+  document.getElementById('cent-resultsCard').classList.add('visible');
+  centInstructions(p, baseG, baseFlOz, baseMl, catG, catFlOz, catMl);
+}
+
+function centInstructions(p, baseG, baseFlOz, baseMl, catG, catFlOz, catMl) {
+  const stepsEl  = document.getElementById('cent-steps');
+  const warnEl   = document.getElementById('cent-warningBox');
+  const isHybrid = p.catPct === 0.05;
+  const steps    = [];
+
+  warnEl.innerHTML = `<div class="warning-box">⚠️ <span><strong>Pot life: ${p.potLife}.</strong> Mix only what you can use within this window. Verify measurements with a scale where possible.</span></div>`;
+
+  steps.push({n:1, text:`Weigh out <strong class="hi-blue">${baseG.toFixed(1)} g</strong> of <strong>${p.name}</strong> into a clean mixing container. This is approximately <strong class="hi-blue">${baseFlOz.toFixed(2)} fl oz (${baseMl.toFixed(1)} ml)</strong>.`});
+  steps.push({n:2, text:`Weigh out <strong class="hi-amber">${catG.toFixed(1)} g</strong> of Centurion 2K Catalyst into a separate small cup — this is <strong>${isHybrid?'5%':'10%'}</strong> of the base weight. By volume this is approximately <strong class="hi-amber">${catMl.toFixed(1)} ml (${catFlOz.toFixed(2)} fl oz)</strong>. Use a syringe if measuring by volume rather than weight.`});
+  steps.push({n:3, text:`Add the catalyst to the base product. Stir thoroughly until fully combined — no streaks or unmixed catalyst should remain.`});
+  steps.push({n:4, text:`Allow to induct (rest) for <strong>5–10 minutes</strong> before spraying. This allows the catalyst to fully activate.`});
+  steps.push({n:5, text:`⏱ <strong>Pot life: ${p.potLife}.</strong> Use within this window. Do not attempt to re-catalyze or thin to extend pot life.`});
+  if (isHybrid) {
+    steps.push({n:6, text:`ℹ️ <strong>Hybrid product note:</strong> This is a 1K/2K Hybrid at 5% catalyst ratio with an extended 3.5-hour pot life. Confirm specific application requirements with your paint supplier.`});
+  }
+
+  stepsEl.innerHTML = steps.map((s,i) =>
+    `<div class="step" style="animation-delay:${i*0.07}s">
+      <div class="step-num blue-num">${s.n}</div>
+      <div class="step-text">${s.text}</div>
+    </div>`).join('');
+  document.getElementById('cent-instructionsCard').classList.add('visible');
+}
+</script>
+</body>
+</html>
